@@ -10,22 +10,22 @@ These simple client-server programs shows how to set up and install ACL (Access 
 ### Usage example
 Source computer has the following users:
 
-![users on test computer](img\users_on_computer.png)
+![users on test computer](img/users_on_computer.png)
 
 Shared section has the following permissions:
 
-![shared section permissions](img\shared_section_permissions.png)
+![shared section permissions](img/shared_section_permissions.png)
 
 Bob runs the client:
 
-![bob runs client](img\client_bob.png)
+![bob runs client](img/client_bob.png)
 
 Alice runs the client:
 
-![alice runs client](img\client_alice.png)
+![alice runs client](img/client_alice.png)
 
 TestUser runs the client:
 
-![testuser runs client](img\client_testuser.png)
+![testuser runs client](img/client_testuser.png)
 
 As expect Alice wasn't allow to open shared section with any permissions, since Alice belongs to Power Users Group.
