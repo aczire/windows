@@ -5,6 +5,11 @@
  * This technique uses the fact that explorer.exe keep pointer
  * to the function in the extra window memory (in Shell_TrayWnd window).
  * So we need to replace this pointer to invoke shellcode.
+ * Code in the explorer.exe which uses the pointer:
+ *     ; esi = GetWindowLong(hTaskBar, 0)
+ *     mov eax, [esi] ; esi - pointer to pointer
+ *     push esi
+ *     call [eax]
  */
 #define WIN32_LEAN_AND_MEAN
 #include "ntapi.h"
