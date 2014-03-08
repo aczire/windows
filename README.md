@@ -1,5 +1,5 @@
 Windows
 ========
 
-* ACL - simple client-server programs which set up and use ACL
+* ACL - simple programs which operate with Access Control List (ACL)
 * inject - some interesting inject techniques
