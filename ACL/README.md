@@ -2,12 +2,13 @@ ACL
 ===
 
 ### General information
-These simple client-server programs shows how to set up and install ACL (Access Control List). There are two files:
 
 * server.cpp - This program creates shared section in Global namespace and set permissions.
 * client.cpp - This program try to open shared section (since not all users allow open it) and then simulate some work.
+* get-dacl.cpp - This program print out the DACL of the named kernel objects (file, event, mutex, etc.).
+* common.h - Some useful functions to get information from the DACL and some common constants.
 
-### Usage example
+### Usage example of the client-server program
 Source computer has the following users:
 
 ![users on test computer](img/users_on_computer.png)
@@ -29,3 +30,12 @@ TestUser runs the client:
 ![testuser runs client](img/client_testuser.png)
 
 As expect Alice wasn't allow to open shared section with any permissions, since Alice belongs to Power Users Group.
+
+### Usage example of get-dacl program
+Print out get DACL of the file kernel32.dll:
+
+![dacl of the kernel32.dll](img/dacl_kernel32.png)
+
+Print out the DACL of the ShellDesktopSwitchEvent:
+
+![dacl of the explorer's event](img/dacl_explorers_event.png)

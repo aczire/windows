@@ -5,93 +5,16 @@
  */
 #define WIN32_LEAN_AND_MEAN
 #include "common.h"
-#include <stdio.h>
 #include <windows.h>
-#include <sddl.h>
-#include <Strsafe.h>
 #include <tchar.h>
+#include <sddl.h>
+#include <strsafe.h>
+#include <stdio.h>
 
 #pragma comment(lib, "advapi32.lib")
 
 // Signal state of this event tells that Ctrl+C or Ctrl+Break was pressed.
 HANDLE gExitEvent = nullptr;
-
-///
-/// <summary>Function returns the string representation of a security identifier (SID)
-/// fot the specific user, i.e. "S-R-I-S-S..."
-/// </summary>
-/// <param name="userName">String which contains the user name on the local computer.</param>
-/// <param name="StringSid">Function writes in this buffer SID string</param>
-/// <param name="StringSidLength">Length in TCHARs of the StringSid buffer, including 
-/// the terminating null character.</param>
-///
-BOOL WINAPI
-GetStringSidByUserName(
-    _In_  PCTSTR userName,
-    _Out_ PTSTR  StringSid,
-    _In_  DWORD  StringSidLength
-)
-{
-    PSID  userSid    = nullptr;
-    PTSTR SidBuffer  = nullptr;
-    PTSTR domainName = nullptr;
-    DWORD sidSize    = 0;
-    DWORD domainSize = 0;
-    BOOL  isOk       = FALSE;
-    SID_NAME_USE sidNameUse;
-    
-    __try {
-        if (nullptr == StringSid) __leave;
-        isOk = LookupAccountName(
-            nullptr,
-            userName,
-            userSid,
-            &sidSize,
-            domainName,
-            &domainSize,
-            &sidNameUse
-        );
-        if (ERROR_INSUFFICIENT_BUFFER != GetLastError()) __leave;
-        
-        userSid = (PSID)LocalAlloc(LMEM_FIXED, sidSize);
-        // Note: Although we don't need the name of the domain where the account name is found
-        // we still need allocate the space for the buffer, because of LookupAccountName
-        // doesn't fill sidNameUse variable.
-        domainName = (PTSTR)LocalAlloc(LMEM_FIXED, domainSize * sizeof(TCHAR));
-        if (nullptr == userSid || nullptr == domainName) __leave;
-
-        isOk = LookupAccountName(
-            nullptr,
-            userName,
-            userSid,
-            &sidSize,
-            domainName,
-            &domainSize,
-            &sidNameUse
-        );
-        if (FALSE == isOk || SidTypeUser != sidNameUse) __leave;
-        
-        isOk = ConvertSidToStringSid(userSid, &SidBuffer);
-        if (FALSE == isOk) __leave;
-        
-        if (StringSidLength < LocalSize(SidBuffer)) __leave;
-        CopyMemory(StringSid, SidBuffer, LocalSize(SidBuffer));
-        
-        isOk = TRUE;
-    } __finally {
-        if (userSid) {
-            LocalFree(userSid);
-        }
-        if (domainName) {
-            LocalFree(domainName);
-        }
-        if (SidBuffer) {
-            LocalFree(SidBuffer);
-        }
-    }
-    
-    return (isOk);
-}
 
 ///
 /// <summary>Function returns security descriptor (SD) for shared section.
@@ -126,13 +49,13 @@ CreateSecurityDescriptorForSharedSection()
     TCHAR   buf[MAX_PATH];
     
     // Build string for ConvertStringSecurityDescriptorToSecurityDescriptor function
-    ret = GetStringSidByUserName(kUserName, stringSid, sizeof(stringSid));
+    ret = GetStringSidByUserName(kUserName, stringSid, sizeof(stringSid)/sizeof(TCHAR));
     if (FALSE == ret) {
         return (sid);
     }
     hResult = StringCchPrintf(
         buf,
-        sizeof(buf),
+        sizeof(buf)/sizeof(TCHAR),
         _T("D:P%s(A;NP;GRGW;;;%s)"), kACEString, stringSid
     );
     if (FAILED(hResult)) {
@@ -172,7 +95,6 @@ SharedSectionWatchDog()
     
     HANDLE hSection = nullptr;
     PBYTE  pData    = nullptr;
-    BOOL   isOk     = FALSE;
     SECURITY_ATTRIBUTES sa;
     
     sa.nLength = sizeof(sa);
@@ -205,9 +127,7 @@ SharedSectionWatchDog()
         _tprintf(_T("Clients can use shared section \"%s\"\n"), kSectionName);
         _putts(_T("Press Ctrl+C to exit"));
         
-        if (WAIT_OBJECT_0 != WaitForSingleObject(gExitEvent, INFINITE)) __leave;
-        
-        isOk = TRUE;
+        WaitForSingleObject(gExitEvent, INFINITE);
     } __finally {
         if (pData) {
             UnmapViewOfFile(pData);
@@ -218,10 +138,6 @@ SharedSectionWatchDog()
         if (sid) {
             LocalFree(sid);
         }
-    }
-    
-    if (isOk) {
-        SetLastError(ERROR_SUCCESS);
     }
 }
 
